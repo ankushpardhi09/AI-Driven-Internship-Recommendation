@@ -1,10 +1,33 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { brand, navigationLinks } from '../api/homepageContent'
 import { useAppContext } from '../context/AppContext'
 import { cn } from '../utils/cn'
 
 export function Header() {
   const { menuOpen, toggleMenu, closeMenu } = useAppContext()
+  const navigate = useNavigate()
+
+  let currentUser = null
+  try {
+    const userData = localStorage.getItem('user')
+    currentUser = userData ? JSON.parse(userData) : null
+  } catch {
+    currentUser = null
+  }
+
+  const isAuthenticated = Boolean(localStorage.getItem('token') && currentUser)
+  const displayName = currentUser?.name || currentUser?.company_name || currentUser?.email
+  const visibleLinks = navigationLinks.filter((link) => {
+    if (!isAuthenticated) return link.to !== '/profile'
+    return link.to !== '/login' && link.to !== '/signup'
+  })
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    closeMenu()
+    navigate('/login')
+  }
 
   return (
     <header className="sticky top-0 z-30 w-full">
@@ -37,7 +60,7 @@ export function Header() {
           )}
           aria-label="Primary"
         >
-          {navigationLinks.map((link) => {
+          {visibleLinks.map((link) => {
             if (link.variant === 'primary') {
               return (
                 <Link
@@ -80,6 +103,19 @@ export function Header() {
               </NavLink>
             )
           })}
+
+          {isAuthenticated && (
+            <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 md:ml-3 md:mt-0">
+              <span className="text-sm font-semibold text-slate-700">{displayName}</span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </nav>
       </div>
     </header>

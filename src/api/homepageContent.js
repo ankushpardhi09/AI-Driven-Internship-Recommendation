@@ -14,6 +14,7 @@ export const routes = {
   faq: '/faq',
   login: '/login',
   signup: '/signup',
+  profile: '/profile',
 }
 
 export const navigationLinks = [
@@ -23,6 +24,7 @@ export const navigationLinks = [
   { label: 'About', to: routes.about, variant: 'link' },
   { label: 'Blog', to: routes.blog, variant: 'link' },
   { label: 'Resources', to: routes.resources, variant: 'link' },
+  { label: 'Profile', to: routes.profile, variant: 'link' },
   { label: 'Login', to: routes.login, variant: 'ghost' },
   { label: 'Sign Up', to: routes.signup, variant: 'primary' },
 ]
