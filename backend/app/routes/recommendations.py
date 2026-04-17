@@ -5,6 +5,13 @@ from app.utils.db_utils import get_collection, object_id
 
 recommendations_bp = Blueprint('recommendations', __name__)
 
+
+def _get_request_data():
+    data = request.get_json(silent=True)
+    if data is None:
+        data = request.form.to_dict()
+    return data or {}
+
 @recommendations_bp.route('/recommendations', methods=['GET'])
 @token_required
 def get_recommendations():
@@ -48,7 +55,7 @@ def create_internship():
     if request.user['role'] != 'employer':
         return {'error': 'Only employers can post internships'}, 403
     
-    data = request.get_json() or {}
+    data = _get_request_data()
     
     # Validate input
     required_fields = ['title', 'description', 'required_skills', 'seats_available']

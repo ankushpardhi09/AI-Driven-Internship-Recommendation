@@ -1,7 +1,85 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiClient } from '../api/apiClient'
 import { hero } from '../api/homepageContent'
+import { getCurrentUser, isUserAuthenticated } from '../utils/authState'
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
 
 export function HeroSection() {
+  const isAuthenticated = isUserAuthenticated()
+  const [liveMatch, setLiveMatch] = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user = getCurrentUser()
+
+    if (!isAuthenticated || !token || user?.role !== 'student') {
+      setLiveMatch(null)
+      return
+    }
+
+    let isMounted = true
+
+    const loadLiveMatch = async () => {
+      try {
+        const result = await apiClient.getCopilotRecommendations(token, 1)
+        const recommendation = result?.local_recommendations?.[0]
+
+        if (!recommendation) {
+          if (isMounted) setLiveMatch(null)
+          return
+        }
+
+        const studentSkills = Array.isArray(result?.student?.skills) ? result.student.skills : []
+        const requiredSkills = Array.isArray(recommendation.required_skills) ? recommendation.required_skills : []
+
+        const normalizedStudent = studentSkills.map((item) => String(item).trim().toLowerCase())
+        const normalizedRequired = requiredSkills.map((item) => String(item).trim().toLowerCase())
+
+        const overlapCount = normalizedRequired.filter((skill) => normalizedStudent.includes(skill)).length
+        const skillsPercent = normalizedRequired.length
+          ? Math.round((overlapCount / normalizedRequired.length) * 100)
+          : Math.round(recommendation.match_score * 100)
+
+        const availabilityPercent = clamp(70 + Number(recommendation.seats_available || 0) * 6, 70, 99)
+        const interestPercent = clamp(Math.round(Number(recommendation.match_score || 0) * 100 + 4), 70, 99)
+        const fitPercent = clamp(Math.round(Number(recommendation.match_score || 0) * 100), 1, 99)
+
+        if (isMounted) {
+          setLiveMatch({
+            title: recommendation.title,
+            description: `${fitPercent}% fit score based on your profile skills, goals, availability, and employer criteria.`,
+            metrics: [
+              { label: 'Skills', value: `${skillsPercent}%` },
+              { label: 'Availability', value: `${availabilityPercent}%` },
+              { label: 'Interest', value: `${interestPercent}%` },
+            ],
+          })
+        }
+      } catch {
+        if (isMounted) setLiveMatch(null)
+      }
+    }
+
+    loadLiveMatch()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAuthenticated])
+
+  const displayedMatch = useMemo(() => {
+    if (liveMatch) return liveMatch
+    return {
+      title: hero.matchTitle,
+      description: hero.matchDescription,
+      metrics: hero.matchMetrics,
+    }
+  }, [liveMatch])
+
   return (
     <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-20 pt-16 md:grid-cols-2 md:pt-24" id="home">
       <div className="animate-fade-up">
@@ -12,9 +90,9 @@ export function HeroSection() {
           <Link
             className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5"
             id="signup"
-            to="/signup"
+            to={isAuthenticated ? '/ai-copilot' : '/signup'}
           >
-            {hero.primaryAction}
+            {isAuthenticated ? 'Explore AI Copilot' : hero.primaryAction}
           </Link>
           <Link
             className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 transition hover:border-blue-300 hover:text-blue-700"
@@ -44,10 +122,10 @@ export function HeroSection() {
         <div className="absolute -right-8 bottom-4 h-40 w-40 rounded-full bg-cyan-400/30 blur-3xl" />
         <div className="glass relative z-10 rounded-3xl border-white/30 bg-gradient-to-br from-slate-900 to-blue-700 p-8 text-white shadow-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-200">Recommended match</p>
-          <h2 className="mt-2 text-2xl font-extrabold">{hero.matchTitle}</h2>
-          <p className="mt-2 text-slate-100/90">{hero.matchDescription}</p>
+          <h2 className="mt-2 text-2xl font-extrabold">{displayedMatch.title}</h2>
+          <p className="mt-2 text-slate-100/90">{displayedMatch.description}</p>
           <div className="mt-6 grid gap-3">
-            {hero.matchMetrics.map((metric) => (
+            {displayedMatch.metrics.map((metric) => (
               <div key={metric.label} className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
                 <span className="text-sm font-semibold text-slate-100">{metric.label}</span>
                 <strong className="text-base font-extrabold text-cyan-200">{metric.value}</strong>

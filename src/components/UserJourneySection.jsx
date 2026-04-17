@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SectionHeading } from './SectionHeading'
+import { isUserAuthenticated } from '../utils/authState'
 
 const journeyLinks = [
   { label: 'Learn more about AI', to: '/ai-copilot' },
@@ -11,6 +12,13 @@ const journeyLinks = [
 ]
 
 export function UserJourneySection() {
+  const isAuthenticated = isUserAuthenticated()
+  const links = journeyLinks.map((item) => {
+    if (item.label !== 'Ready to join?') return item
+    if (!isAuthenticated) return item
+    return { label: 'Explore AI Copilot', to: '/ai-copilot', primary: true }
+  })
+
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-12 md:py-16">
       <SectionHeading eyebrow="Typical user journey" title="How a new visitor moves through the platform" />
@@ -29,7 +37,7 @@ export function UserJourneySection() {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {journeyLinks.map((item) => (
+          {links.map((item) => (
             <Link
               key={item.label}
               to={item.to}

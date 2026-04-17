@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SectionHeading } from '../components/SectionHeading'
+import { isUserAuthenticated } from '../utils/authState'
 
 const missionCards = [
   {
@@ -87,6 +88,8 @@ const differentiators = [
 const press = ['TechCrunch', 'LinkedIn News', 'YourStory', 'Economic Times', 'Startup India', 'EdTech Review']
 
 export function AboutPage() {
+  const isAuthenticated = isUserAuthenticated()
+
   return (
     <main className="pb-10">
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pb-10 pt-14 md:grid-cols-2 md:pt-20">
@@ -236,8 +239,8 @@ export function AboutPage() {
             <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-5xl">Join our mission to transform internship placement</h2>
           </div>
           <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
-            <Link to="/signup" className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
-              Join Our Mission
+            <Link to={isAuthenticated ? '/ai-copilot' : '/signup'} className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
+              {isAuthenticated ? 'Explore AI Copilot' : 'Join Our Mission'}
             </Link>
             <Link
               to="/resources"

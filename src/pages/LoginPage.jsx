@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageHero } from '../components/PageHero'
 import { apiClient } from '../api/apiClient'
+import { isUserAuthenticated } from '../utils/authState'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,12 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isUserAuthenticated()) {
+      navigate('/profile', { replace: true })
+    }
+  }, [navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

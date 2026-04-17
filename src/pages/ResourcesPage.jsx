@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SectionHeading } from '../components/SectionHeading'
+import { isUserAuthenticated } from '../utils/authState'
 
 const categories = [
   'For Students',
@@ -147,6 +148,7 @@ const communityItems = [
 export function ResourcesPage() {
   const [activeCategory, setActiveCategory] = useState('For Students')
   const [query, setQuery] = useState('')
+  const isAuthenticated = isUserAuthenticated()
 
   const filteredResources = useMemo(
     () =>
@@ -343,11 +345,11 @@ export function ResourcesPage() {
             </h2>
           </div>
           <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
-            <Link to="/signup" className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
-              Get Started
+            <Link to={isAuthenticated ? '/ai-copilot' : '/signup'} className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
+              {isAuthenticated ? 'Explore AI Copilot' : 'Get Started'}
             </Link>
             <Link
-              to="/login"
+              to={isAuthenticated ? '/profile' : '/login'}
               className="rounded-full border border-white/40 px-5 py-3 font-semibold text-white transition hover:bg-white/10"
             >
               Open Dashboard

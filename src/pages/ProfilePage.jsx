@@ -21,6 +21,9 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingResume, setUploadingResume] = useState(false)
+  const [recommendations, setRecommendations] = useState([])
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false)
+  const [recommendationsError, setRecommendationsError] = useState('')
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -56,6 +59,13 @@ export function ProfilePage() {
         setCompanyName(user.company_name || '')
         setCompanyEmail(user.company_email || '')
       }
+
+      if (user.role === 'student') {
+        await loadRecommendations(token)
+      } else {
+        setRecommendations([])
+        setRecommendationsError('')
+      }
     } catch (err) {
       if (String(err.message).includes('HTTP 401')) {
         localStorage.removeItem('token')
@@ -67,6 +77,20 @@ export function ProfilePage() {
       setError(err.message || 'Failed to load profile.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadRecommendations = async (token) => {
+    try {
+      setRecommendationsLoading(true)
+      setRecommendationsError('')
+      const result = await apiClient.getCopilotRecommendations(token, 5)
+      setRecommendations(result.local_recommendations || [])
+    } catch (err) {
+      setRecommendations([])
+      setRecommendationsError(err.message || 'Failed to load recommendations.')
+    } finally {
+      setRecommendationsLoading(false)
     }
   }
 
@@ -118,8 +142,11 @@ export function ProfilePage() {
           college,
           city,
           profile_photo_url: profilePhotoUrl,
-          resume_url: resumeUrl,
           experience_years: experienceYears === '' ? 0 : Number(experienceYears),
+        }
+
+        if (resumeUrl.trim()) {
+          payload.resume_url = resumeUrl.trim()
         }
       } else {
         if (!companyName.trim() || !companyEmail.trim()) {
@@ -137,6 +164,10 @@ export function ProfilePage() {
       setProfile(result.user)
       localStorage.setItem('user', JSON.stringify(result.user))
       setSuccessMessage('Profile updated successfully.')
+
+      if (result.user.role === 'student') {
+        await loadRecommendations(token)
+      }
     } catch (err) {
       setError(err.message || 'Failed to update profile.')
     } finally {
@@ -166,6 +197,10 @@ export function ProfilePage() {
       setProfilePhotoUrl(updatedUser.profile_photo_url || result.file_url || '')
       localStorage.setItem('user', JSON.stringify(updatedUser))
       setSuccessMessage('Profile photo uploaded successfully.')
+
+      if (updatedUser.role === 'student') {
+        await loadRecommendations(token)
+      }
     } catch (err) {
       setError(err.message || 'Failed to upload profile photo.')
     } finally {
@@ -200,6 +235,10 @@ export function ProfilePage() {
       setResumeUrl(updatedUser.resume_url || result.file_url || '')
       localStorage.setItem('user', JSON.stringify(updatedUser))
       setSuccessMessage('Resume uploaded successfully.')
+
+      if (updatedUser.role === 'student') {
+        await loadRecommendations(token)
+      }
     } catch (err) {
       setError(err.message || 'Failed to upload resume.')
     } finally {
@@ -334,17 +373,6 @@ export function ProfilePage() {
               </label>
 
               <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                Resume URL
-                <input
-                  type="url"
-                  value={resumeUrl}
-                  onChange={(e) => setResumeUrl(e.target.value)}
-                  placeholder="https://drive.google.com/..."
-                  className="h-11 rounded-xl border border-slate-200 bg-white px-3"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm font-semibold text-slate-700">
                 Upload resume
                 <input
                   type="file"
@@ -416,14 +444,46 @@ export function ProfilePage() {
             {saving ? 'Saving...' : 'Save Profile'}
           </button>
 
-          <p className="text-sm text-slate-600">
-            Need to login again?{' '}
-            <Link className="font-bold text-blue-700" to="/login">
-              Login
-            </Link>
-          </p>
         </form>
       </section>
+
+      {profile?.role === 'student' && (
+        <section className="mt-8 grid gap-4">
+          <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Recommended internships</p>
+                <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Updated automatically from your profile</h2>
+              </div>
+              <p className="text-sm text-slate-600">{recommendationsLoading ? 'Refreshing matches...' : 'Matches based on your saved profile and seat availability.'}</p>
+            </div>
+
+            {recommendationsError && <p className="mt-4 text-sm font-semibold text-red-600">{recommendationsError}</p>}
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {recommendations.map((item) => (
+                <article key={item.internship_id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Rank #{item.rank}</p>
+                      <h3 className="mt-1 text-lg font-bold text-slate-900">{item.title}</h3>
+                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                      {(item.match_score * 100).toFixed(0)}% fit
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-600">Seats available: {item.seats_available}</p>
+                  <p className="mt-2 text-sm text-slate-500">Auto-updated when your profile changes.</p>
+                </article>
+              ))}
+
+              {!recommendationsLoading && recommendations.length === 0 && !recommendationsError && (
+                <p className="text-sm text-slate-500">No recommendations yet. Update your student profile to generate internship cards.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </main>
   )
 }

@@ -15,6 +15,10 @@ class Config:
     # JWT Configuration
     JWT_SECRET = os.getenv('JWT_SECRET', 'jwt-secret-key')
     JWT_EXPIRATION_HOURS = 24
+
+    # Optional Tavily web search integration for AI Copilot
+    TAVILY_API_KEY = os.getenv('TAVILY_API_KEY', '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')
+    TAVILY_API_URL = os.getenv('TAVILY_API_URL', 'https://api.tavily.com/search')
     
     # CORS Configuration
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')

@@ -171,6 +171,39 @@ class ApiEndpointTests(unittest.TestCase):
             },
         )
 
+    @patch("app.routes.copilot.CopilotService.get_recommendations")
+    @patch("app.services.auth_service.AuthService.verify_token")
+    def test_copilot_recommendations_for_student(self, verify_token_mock, copilot_mock):
+        verify_token_mock.return_value = {
+            "user_id": "507f1f77bcf86cd799439016",
+            "email": "student@example.com",
+            "role": "student",
+        }
+        copilot_mock.return_value = (
+            {
+                "student": {
+                    "user_id": "507f1f77bcf86cd799439016",
+                    "name": "Student Name",
+                    "skills": ["python", "flask"],
+                },
+                "query": "internship jobs python flask",
+                "local_recommendations": [],
+                "web_recommendations": [],
+                "web_summary": "Set TAVILY_API_KEY to enable live web job search.",
+                "tavily_enabled": False,
+                "allocation_note": "Local internship matches respect open seat availability.",
+            },
+            200,
+        )
+
+        response = self.client.get(
+            "/api/copilot/recommendations?top_n=5",
+            headers={"Authorization": "Bearer fake-token"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["student"]["name"], "Student Name")
+
 
 if __name__ == "__main__":
     unittest.main()

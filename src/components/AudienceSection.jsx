@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import { audiences } from '../api/homepageContent'
+import { isUserAuthenticated } from '../utils/authState'
 
 export function AudienceSection() {
+  const isAuthenticated = isUserAuthenticated()
+
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-4 px-4 py-16 md:grid-cols-2 md:py-20">
       {audiences.map((audience) => (
@@ -21,9 +24,9 @@ export function AudienceSection() {
           </ul>
           <Link
             className="mt-6 inline-flex rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 font-bold text-white transition hover:-translate-y-0.5"
-            to={audience.title === 'For Students' ? '/signup' : '/login'}
+            to={isAuthenticated ? '/ai-copilot' : audience.title === 'For Students' ? '/signup' : '/login'}
           >
-            {audience.cta}
+            {isAuthenticated ? 'Explore AI Copilot' : audience.cta}
           </Link>
         </article>
       ))}

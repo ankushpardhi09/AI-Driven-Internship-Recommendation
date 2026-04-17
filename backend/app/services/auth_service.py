@@ -165,6 +165,8 @@ class AuthService:
             ]
             for field in allowed_fields:
                 if field in data:
+                    if field == 'resume_url' and not str(data[field]).strip():
+                        continue
                     update_fields[field] = data[field]
 
             if 'skills' in data:
@@ -180,7 +182,9 @@ class AuthService:
                     update_fields[field] = data[field]
 
         if not update_fields:
-            return {'error': 'No valid fields to update'}, 400
+            user['_id'] = str(user['_id'])
+            user.pop('password_hash', None)
+            return {'user': user, 'message': 'No changes detected'}, 200
 
         update_fields['updated_at'] = datetime.utcnow()
 

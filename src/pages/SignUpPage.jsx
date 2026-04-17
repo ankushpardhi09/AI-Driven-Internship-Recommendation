@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageHero } from '../components/PageHero'
 import { apiClient } from '../api/apiClient'
+import { isUserAuthenticated } from '../utils/authState'
 
 export function SignUpPage() {
   const [role, setRole] = useState('student')
@@ -19,6 +20,12 @@ export function SignUpPage() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isUserAuthenticated()) {
+      navigate('/profile', { replace: true })
+    }
+  }, [navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

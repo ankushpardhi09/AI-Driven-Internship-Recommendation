@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { routes } from './api/homepageContent'
 import { AppProvider } from './context/AppContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { PublicOnlyRoute } from './components/PublicOnlyRoute'
 import { RouteWelcomeLoader } from './components/RouteWelcomeLoader'
 import { AICopilotPage } from './pages/AICopilotPage'
 import { SiteLayout } from './components/SiteLayout'
@@ -33,8 +34,22 @@ function App() {
             <Route path={routes.resources} element={<ResourcesPage />} />
             <Route path={routes.features} element={<FeaturesPage />} />
             <Route path={routes.faq} element={<FaqPage />} />
-            <Route path={routes.login} element={<LoginPage />} />
-            <Route path={routes.signup} element={<SignUpPage />} />
+            <Route
+              path={routes.login}
+              element={(
+                <PublicOnlyRoute>
+                  <LoginPage />
+                </PublicOnlyRoute>
+              )}
+            />
+            <Route
+              path={routes.signup}
+              element={(
+                <PublicOnlyRoute>
+                  <SignUpPage />
+                </PublicOnlyRoute>
+              )}
+            />
             <Route
               path={routes.profile}
               element={(

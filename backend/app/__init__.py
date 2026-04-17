@@ -26,9 +26,10 @@ def create_app(config_name=None):
     })
     
     # Register blueprints (routes)
-    from app.routes import auth_bp, recommendations_bp
+    from app.routes import auth_bp, recommendations_bp, copilot_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(recommendations_bp, url_prefix='/api')
+    app.register_blueprint(copilot_bp, url_prefix='/api')
     
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])

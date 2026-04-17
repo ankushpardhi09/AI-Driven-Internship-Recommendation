@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SectionHeading } from '../components/SectionHeading'
+import { isUserAuthenticated } from '../utils/authState'
 
 const employerBenefits = [
   'Save time on screening',
@@ -115,6 +116,7 @@ const screeningFeatures = [
 
 export function EmployerPage() {
   const [activeFaq, setActiveFaq] = useState(0)
+  const isAuthenticated = isUserAuthenticated()
 
   return (
     <main className="pb-10">
@@ -126,8 +128,8 @@ export function EmployerPage() {
           </h1>
           <p className="mt-4 text-lg text-slate-600">Access pre-screened top talent in minutes and scale hiring with AI-powered workflows.</p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/signup" className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5">
-              Post Your Internship
+            <Link to={isAuthenticated ? '/profile' : '/signup'} className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5">
+              {isAuthenticated ? 'Open Dashboard' : 'Post Your Internship'}
             </Link>
             <Link to="/resources" className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 transition hover:border-blue-300 hover:text-blue-700">
               Schedule Demo
@@ -215,8 +217,8 @@ export function EmployerPage() {
                   </li>
                 ))}
               </ul>
-              <Link to="/signup" className="mt-5 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700">
-                Choose {plan.name}
+              <Link to={isAuthenticated ? '/profile' : '/signup'} className="mt-5 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700">
+                {isAuthenticated ? 'Open Dashboard' : `Choose ${plan.name}`}
               </Link>
             </article>
           ))}
@@ -287,8 +289,8 @@ export function EmployerPage() {
             <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-5xl">Post your first internship and hire faster with AI</h2>
           </div>
           <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
-            <Link to="/signup" className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
-              Post Your First Internship
+            <Link to={isAuthenticated ? '/profile' : '/signup'} className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 transition hover:-translate-y-0.5">
+              {isAuthenticated ? 'Open Dashboard' : 'Post Your First Internship'}
             </Link>
             <Link
               to="/resources"

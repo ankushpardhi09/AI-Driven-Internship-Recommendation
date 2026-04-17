@@ -23,6 +23,14 @@ async function request(path, options = {}) {
     : { error: await response.text() }
 
   if (!response.ok) {
+    const rawError = typeof data.error === 'string' ? data.error : ''
+    if (
+      response.status === 500 &&
+      /ECONNREFUSED|proxy|connect/i.test(rawError)
+    ) {
+      throw new Error('Backend API is not running. Start backend on port 5000 and try again.')
+    }
+
     const fallbackMessage = `Request failed (HTTP ${response.status})`
     throw new Error(data.error || fallbackMessage)
   }
@@ -100,6 +108,17 @@ export const apiClient = {
   // Recommendations endpoint
   getRecommendations: async (token, top_n = 10) => {
     return request(`/recommendations?top_n=${top_n}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  },
+
+  getCopilotRecommendations: async (token, top_n = 5, query = '') => {
+    const searchParams = new URLSearchParams({ top_n: String(top_n) })
+    if (query.trim()) {
+      searchParams.set('q', query.trim())
+    }
+
+    return request(`/copilot/recommendations?${searchParams.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
   },

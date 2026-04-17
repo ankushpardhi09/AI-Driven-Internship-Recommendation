@@ -7,6 +7,13 @@ from app.services.auth_service import AuthService, token_required
 auth_bp = Blueprint('auth', __name__)
 
 
+def _get_request_data():
+    data = request.get_json(silent=True)
+    if data is None:
+        data = request.form.to_dict()
+    return data or {}
+
+
 def _save_user_file(file_storage, prefix, allowed_extensions):
     filename = secure_filename(file_storage.filename or '')
     if not filename:
@@ -24,7 +31,7 @@ def _save_user_file(file_storage, prefix, allowed_extensions):
 @auth_bp.route('/register/student', methods=['POST'])
 def register_student():
     """Register new student"""
-    data = request.get_json() or {}
+    data = _get_request_data()
     
     # Validate input
     required_fields = ['email', 'password', 'name', 'skills']
@@ -48,7 +55,7 @@ def register_student():
 @auth_bp.route('/register/employer', methods=['POST'])
 def register_employer():
     """Register new employer"""
-    data = request.get_json() or {}
+    data = _get_request_data()
     
     # Validate input
     required_fields = ['email', 'password', 'company_name', 'company_email']
@@ -68,7 +75,7 @@ def register_employer():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """Login user"""
-    data = request.get_json() or {}
+    data = _get_request_data()
     
     # Validate input
     if not all(field in data for field in ['email', 'password', 'role']):
@@ -113,7 +120,7 @@ def get_profile():
 @token_required
 def update_profile():
     """Update profile for logged in user"""
-    data = request.get_json() or {}
+    data = _get_request_data()
     result, status_code = AuthService.update_profile(request.user['user_id'], data)
     return jsonify(result), status_code
 

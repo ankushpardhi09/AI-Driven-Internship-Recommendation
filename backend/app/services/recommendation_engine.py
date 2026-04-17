@@ -53,6 +53,9 @@ class RecommendationEngine:
             student.get('skills', []),
             student.get('preferences', '')
         )
+
+        recommendations_col = get_collection('recommendations')
+        recommendations_col.delete_many({'student_id': object_id(student_id)})
         
         internship_texts = [
             self._combine_text(
@@ -96,7 +99,7 @@ class RecommendationEngine:
                 score=float(score),
                 rank=rank
             )
-            get_collection('recommendations').insert_one(rec_data)
+            recommendations_col.insert_one(rec_data)
         
         return {'recommendations': recommendations}, 200
     
